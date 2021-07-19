@@ -1,25 +1,43 @@
 <script>
   import VirtualList from './VirtualList.svelte'
   let itemCount = 100
-  function getItem(index) {
-    console.log('getItem')
-    let x = index
-    for (let i = 0; i < 10_000_000; i++) {
-      x++
+  let rowLoadingMs = 0
+  function sleep(delay) {
+    var start = new Date().getTime()
+    let counter = 0
+    while (new Date().getTime() < start + delay) {
+      counter++
     }
-    return { num: index, x }
+    return counter
   }
+  function getItem(index) {
+    return { num: index, x: sleep(rowLoadingMs) }
+  }
+  let refresh
 </script>
 
-<input type="text" bind:value={itemCount} />
+<label>
+  Item count:
+  <input type="number" bind:value={itemCount} />
+</label>
+<button on:click={refresh}>Refresh</button>
+<label>
+  Row loading time (ms):
+  <input type="number" bind:value={rowLoadingMs} />
+</label>
+
 <div class="stuff" style="height: 80vh">
-  <VirtualList {getItem} {itemCount} itemHeight={24} let:item={track} let:pos>
-    <div class="item" style="top: {pos}px;">num {track.num}, {track.x}, {pos}</div>
+  <VirtualList {getItem} {itemCount} itemHeight={24} bind:refresh let:item={track} let:index>
+    <div class="item" class:odd={index % 2 === 0}>num {track.num}, {track.x}</div>
   </VirtualList>
 </div>
+
 <style>
   .item {
-    position: absolute;
     font-family: sans-serif;
+    height: 24px;
+  }
+  .odd {
+    background-color: #eee;
   }
 </style>
